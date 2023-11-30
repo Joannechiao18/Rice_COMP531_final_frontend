@@ -1,108 +1,131 @@
-// Posts.js
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
 import "./posts.scss";
 import Post from "../post/Post";
 import Share from "../share/Share";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../reducer/authReducer";
-import { addPost, setPosts } from "../../actions/postsActions";
+import { setPosts } from "../../actions/postsActions";
 import { selectPosts } from "../../reducer/postsReducer";
 import { selectFollowedUsers } from "../../reducer/followedUsersReducer";
 import { FilterTermContext } from "../../context/FilterTermContext";
+import styled from "styled-components";
+
+const BaseButton = styled.button`
+  border: none;
+  border-radius: 5px;
+  padding: 5px 15px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+`;
+
+const PageButton = styled(BaseButton)`
+  color: black;
+  background-color: #e3e0e0;
+  margin-right: 5px;
+  margin: 0 10px; // Adds 10px margin on both sides
+
+  &:hover {
+    background-color: #dedada;
+  }
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+
+const PageIndicator = styled.span`
+  margin: 0 10px; // Maintains the margin
+  font-size: 12px; // Sets the font size
+  color: #6c757d; // Bootstrap's .text-muted color, adjust as needed
+`;
 
 const Posts = () => {
   const currentUser = useSelector(selectUser);
-  const posts = useSelector(selectPosts) || [];
+  const posts = useSelector(selectPosts);
   const dispatch = useDispatch();
-  const currentUserID = currentUser.id;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Assuming total pages info is available from server
   const followedUsers = useSelector(selectFollowedUsers);
   const { filterTerm = "" } = useContext(FilterTermContext);
 
-  // Filtering the posts based on the filterTerm
-  const filteredPosts = posts.filter((post) => {
-    return (
-      (post.name
-        ? post.name.toLowerCase().includes(filterTerm.toLowerCase())
-        : false) ||
-      (post.desc
-        ? post.desc.toLowerCase().includes(filterTerm.toLowerCase())
-        : false)
-    );
-  });
+  const fetchCurrentUserPosts = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/articles?username=${currentUser.username}&page=${currentPage}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      dispatch(setPosts(data.articles));
+      setTotalPages(data.articles.length); // Set the total pages (assuming the server sends this info)
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+    }
+  };
 
   useEffect(() => {
-    const userImages = [
-      "https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1600",
-      "https://images.pexels.com/photos/4881619/pexels-photo-4881619.jpeg?auto=compress&cs=tinysrgb&w=1600",
-      "https://images.pexels.com/photos/4881650/pexels-photo-4881650.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    ];
+    fetchCurrentUserPosts();
+  }, [currentPage, followedUsers]); // Dependency on currentPage
 
-    // Extract IDs from the followedUsers objects
-    const followedUserIds = followedUsers
-      .filter((user) => user.id !== currentUserID)
-      .map((user) => user.id);
-
-    // Combine initial followedUserIds with the ones added from RightBar, and also include the current user
-    const allFollowedUserIds = [
-      ...new Set([...followedUserIds, currentUserID]),
-    ];
-
-    const fetchDetailsAndPosts = async () => {
-      const allPosts = [];
-
-      // Loop through each user's ID in allFollowedUserIds and fetch their posts
-      for (let userId of allFollowedUserIds) {
-        // Fetch user data to get the user's name
-
-        const userResponse = await fetch(
-          `https://jsonplaceholder.typicode.com/users/${userId}`
+  // Filter and sort posts for display
+  const sortedAndFilteredPosts = useMemo(() => {
+    return (Array.isArray(posts) ? posts : [])
+      .filter((post) => {
+        return (
+          (post.name &&
+            post.name.toLowerCase().includes(filterTerm.toLowerCase())) ||
+          (post.desc &&
+            post.desc.toLowerCase().includes(filterTerm.toLowerCase()))
         );
-
-        const clonedResponse = userResponse.clone();
-
-        // For debugging
-        const responseText = await clonedResponse.text();
-
-        const userData = await userResponse.json();
-
-        const response = await fetch(
-          `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
-        );
-        const userPosts = await response.json();
-        // Add profilePic and user name details to each post
-        const postsWithDetails = userPosts.map((post) => {
-          return {
-            ...post,
-            profilePic: userImages[userId % userImages.length],
-            username: userData.username, // Use the name from the user data
-            desc: post.title,
-            body: post.body,
-          };
-        });
-
-        allPosts.push(...postsWithDetails);
-      }
-
-      dispatch(setPosts(allPosts));
-    };
-
-    fetchDetailsAndPosts();
-  }, [currentUserID, followedUsers]);
-
-  const addNewPost = (newPost) => {
-    dispatch(addPost(newPost));
-  };
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [posts, filterTerm]);
 
   return (
     <div className="posts container mt-5">
-      <Share addNewPost={addNewPost} />
+      <Share />
       <div className="row">
-        {filteredPosts.map((post) => (
+        {/* Posts mapping */}
+        {posts.map((post) => (
           <div className="col-12 mb-5" key={post.id}>
             <Post post={post} />
           </div>
         ))}
       </div>
+      <PaginationContainer>
+        <PageButton
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </PageButton>
+        <PageIndicator>
+          Page {currentPage} of {totalPages}
+        </PageIndicator>
+        <PageButton
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </PageButton>
+      </PaginationContainer>
     </div>
   );
 };

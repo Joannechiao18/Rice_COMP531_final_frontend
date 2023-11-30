@@ -1,67 +1,156 @@
 import "./post.scss";
-import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
-import FavoriteOutlinedIcon from "@mui/icons-material/FavoriteOutlined";
-import TextsmsOutlinedIcon from "@mui/icons-material/TextsmsOutlined";
-import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import TextsmsOutlinedIcon from "@mui/icons-material/TextsmsOutlined"; // Comment icon
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
 import { Link } from "react-router-dom";
 import Comments from "../comments/Comments";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns"; // Import date-fns library
+import { TextField, Button } from "@mui/material"; // Import Material UI components
+import { useSelector, useDispatch } from "react-redux";
+import { updatePost } from "../../actions/postsActions";
+import { selectPosts } from "../../reducer/postsReducer";
+import { selectFollowedUsers } from "../../reducer/followedUsersReducer";
+import { selectUser } from "../../reducer/authReducer";
 
 const Post = ({ post }) => {
+  const currentUser = useSelector(selectUser);
   const [commentOpen, setCommentOpen] = useState(false);
-  //TEMPORARY
-  const liked = false;
+  const [editMode, setEditMode] = useState(false);
+  const [editedText, setEditedText] = useState(post.text);
+  const [timeAgo, setTimeAgo] = useState("");
+  const dispatch = useDispatch();
+  const followedUsers = useSelector(selectFollowedUsers);
+
+  useEffect(() => {
+    const updateTimeInterval = 60000; // 1 minute
+
+    const updateTimer = () => {
+      const postDate = new Date(post.date);
+      if (!isNaN(postDate)) {
+        setTimeAgo(formatDistanceToNow(postDate, { addSuffix: true }));
+      } else {
+        console.error("Invalid date format in post.createdAt:", post.createdAt);
+        setTimeAgo("Unknown time");
+      }
+    };
+
+    updateTimer(); // Call immediately for the first time
+    const interval = setInterval(updateTimer, updateTimeInterval);
+
+    return () => clearInterval(interval);
+  }, [post.createdAt]);
 
   const toggleComments = () => {
     setCommentOpen((prevState) => !prevState);
   };
+
+  const handleEdit = () => {
+    setEditMode(true);
+  };
+
+  const handleEditCancel = () => {
+    setEditMode(false);
+    setEditedText(post.text); // Reset the edited text to original text if cancelled
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/articles/${post.id}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          //add comment id
+          body: JSON.stringify({ text: editedText, articleId: post.id }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update the post.");
+      }
+
+      const updatedPost = await response.json();
+
+      dispatch(updatePost(updatedPost));
+
+      setEditMode(false);
+    } catch (error) {
+      console.error("Error updating post:", error);
+    }
+  };
+
+  let authorAvatar;
+
+  if (post.author === currentUser.username) {
+    // If the post is by the currentUser, use their avatar
+    authorAvatar = currentUser.avatar;
+  } else {
+    // Otherwise, find the author in followedUsers
+    const authorData = followedUsers.find(
+      (user) => user.username === post.author
+    );
+    authorAvatar = authorData ? authorData.avatar : post.avatar;
+  }
 
   return (
     <div className="post">
       <div className="container">
         <div className="user">
           <div className="userInfo">
-            <img src={post.profilePic} alt="" />
+            {/*different post avatar*/}
+            <img src={authorAvatar} alt="" /> {/* Use authorAvatar here */}
             <div className="details">
               <Link
                 to={`/profile/${post.userId}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <span className="name">{post.username}</span>
+                <span className="name">{post.author}</span>
               </Link>
-              <span className="date">1 min ago</span>
+              <span className="date">{timeAgo}</span>
             </div>
           </div>
           <MoreHorizIcon />
         </div>
         <div className="content">
-          <h2>{post.desc}</h2> {/* Displaying the title here */}
-          <p>{post.body}</p> {/* Displaying the body here */}
-          <img src={post.img} alt="" />
+          {editMode ? (
+            <TextField
+              multiline
+              fullWidth
+              variant="outlined"
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+            />
+          ) : (
+            <p>{post.text}</p>
+          )}
+          <img src={post.image} alt="" />
         </div>
         <div className="info">
-          <div className="item">
-            {liked ? <FavoriteOutlinedIcon /> : <FavoriteBorderOutlinedIcon />}
-            12 Likes
-          </div>
+          {editMode ? (
+            <>
+              <Button onClick={handleEditSave}>Save</Button>
+              <Button onClick={handleEditCancel}>Cancel</Button>
+            </>
+          ) : (
+            <>
+              <div className="item" onClick={toggleComments}>
+                <TextsmsOutlinedIcon />
+                {commentOpen ? "Hide Comments" : "Show Comments"}
+              </div>
 
-          <div className="item" onClick={toggleComments}>
-            <TextsmsOutlinedIcon />
-            {commentOpen ? "Hide Comments" : "Show Comments"} (12)
-          </div>
-
-          <div className="item">
-            <ShareOutlinedIcon />
-            Share
-          </div>
-          <div className="item">
-            <CreateOutlinedIcon />
-            Edit
-          </div>
+              <div className="item" onClick={handleEdit}>
+                <CreateOutlinedIcon />
+                Edit
+              </div>
+            </>
+          )}
         </div>
-        {commentOpen && <Comments />}
+        {commentOpen && <Comments articleId={post.id} />}{" "}
+        {/* Pass articleId here */}
       </div>
     </div>
   );

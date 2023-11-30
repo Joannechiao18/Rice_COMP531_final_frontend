@@ -1,13 +1,12 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import { Link } from "react-router-dom";
 import PlaceIcon from "@mui/icons-material/Place";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import EditIcon from "@mui/icons-material/Edit";
+import CakeIcon from "@mui/icons-material/Cake";
 import PhoneIcon from "@mui/icons-material/Phone";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import EditProfileModal from "../../components/modal/EditProfileModal";
-import { AuthContext } from "../../context/authContext";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import "./profile.scss";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { useSelector, useDispatch } from "react-redux";
@@ -40,14 +39,87 @@ const EditButton = styled(BaseButton)`
 `;
 
 const Profile = () => {
-  //const { currentUser, setCurrentUser } = useContext(AuthContext);
   const currentUser = useSelector(selectUser) || {};
-
-  console.log("profile", currentUser);
 
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+
+  const [profileData, setProfileData] = useState({
+    username: "",
+    email: "",
+    dob: "",
+    phone: "",
+    zipcode: "",
+    password: "",
+    avatar: "",
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const username = currentUser.username;
+
+        console.log("username", username);
+
+        const fetchJsonData = async (url) => {
+          const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            //mode: "cors",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Error: ${response.status} - ${response.statusText}`
+            );
+          }
+
+          return await response.json();
+        };
+
+        // Fetch user details (email, phone, etc.)
+        const emailData = await fetchJsonData(
+          //`https://yw187server-3d9494142af2.herokuapp.com/email/${username}`
+          `http://localhost:3000/email/${username}`
+        );
+
+        const dobData = await fetchJsonData(
+          //`https://yw187server-3d9494142af2.herokuapp.com/email/${username}`
+          `http://localhost:3000/dob/${username}`
+        );
+
+        const phoneData = await fetchJsonData(
+          //`https://yw187server-3d9494142af2.herokuapp.com/phone/${username}`
+          `http://localhost:3000/phone/${username}`
+        );
+        const zipcodeData = await fetchJsonData(
+          //`https://yw187server-3d9494142af2.herokuapp.com/zipcode/${username}`
+          `http://localhost:3000/zipcode/${username}`
+        );
+        const avatarData = await fetchJsonData(
+          `http://localhost:3000/avatar/${username}`
+        );
+
+        // Update state with the fetched data
+        setProfileData({
+          username: username,
+          email: emailData.email,
+          dob: dobData.dob,
+          phone: phoneData.phone,
+          zipcode: zipcodeData.zipcode,
+          avatar: avatarData.avatar,
+        });
+      } catch (error) {
+        console.error("Error fetching profile data:", error.message);
+      }
+    };
+
+    fetchData();
+  }, [currentUser]);
 
   const handleEditClick = () => {
     setIsModalOpen(true);
@@ -71,46 +143,53 @@ const Profile = () => {
     setIsModalOpen(false);
   };
 
-  /*const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    setProfilePicture(file);
-  };*/
-
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      setProfilePicture(reader.result);
-    };
-
     if (file) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        setProfilePicture(reader.result);
+        handleUploadProfilePicture(file); // Call upload function here
+      };
+
       reader.readAsDataURL(file);
     }
   };
 
-  const handleUploadProfilePicture = () => {
-    if (profilePicture) {
+  const handleUploadProfilePicture = async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    if (file) {
+      const response = await fetch(`http://localhost:3000/avatar`, {
+        method: "PUT",
+        credentials: "include",
+
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update avatar.");
+      }
+
+      const updatedData = await response.json();
+
       dispatch(
         login({
           ...currentUser,
-          profilePic: profilePicture,
+          avatar: updatedData.avatar,
         })
       );
+
+      setProfileData((prevData) => ({
+        ...prevData,
+        avatar: updatedData.avatar,
+      }));
     }
   };
 
-  /*const handleUploadProfilePicture = () => {
-    setTimeout(() => {
-      dispatch(
-        login({
-          ...currentUser,
-          profilePic: "https://via.placeholder.com/150",
-        })
-      );
-      setIsModalOpen(false);
-    }, 1000);
-  };*/
+  useEffect(() => {}, [profilePicture]);
 
   return (
     <div className="profile container mt-4">
@@ -121,12 +200,8 @@ const Profile = () => {
         <div className="col-12 text-center mt-3">
           <div className="profile-pic-wrapper">
             <img
-              src={
-                profilePicture ||
-                (currentUser && currentUser.profilePic) ||
-                "https://via.placeholder.com/150"
-              }
-              alt={currentUser ? currentUser.username : "User"}
+              src={profileData.avatar}
+              //alt={currentUser ? profileData.username : "User"}
               className="img-fluid rounded-circle profile-pic"
             />
 
@@ -134,7 +209,7 @@ const Profile = () => {
               type="file"
               id="profile-pic-input"
               style={{ display: "none" }}
-              onChange={handleFileChange}
+              onChange={(e) => handleFileChange(e, handleUploadProfilePicture)}
               accept="image/*"
             />
             <label
@@ -153,22 +228,26 @@ const Profile = () => {
         <div className="col-4 text-center"></div>
         <div className="col-4 text-center">
           <h3>
-            <strong>{currentUser.username}</strong>
+            <strong>{profileData.username}</strong>
           </h3>
           <p>
-            <EmailOutlinedIcon /> {currentUser.email}
+            <EmailOutlinedIcon /> {profileData.email}
           </p>
           <p>
-            <PhoneIcon /> {currentUser.phone}
+            <CakeIcon />
+            {profileData.dob}
+          </p>
+          <p>
+            <PhoneIcon /> {profileData.phone}
           </p>
           <p>
             <PlaceIcon />
-            {currentUser.zipcode}
+            {profileData.zipcode}
           </p>
-          <p>
+          {/*<p>
             <VisibilityOffIcon />
-            {currentUser.password && "*".repeat(currentUser.password.length)}
-          </p>
+            {profileData.password && "*".repeat(profileData.password.length)}
+            </p>*/}
           <EditButton onClick={handleEditClick}>Edit</EditButton>
         </div>
         <div className="col-4 text-center"></div>

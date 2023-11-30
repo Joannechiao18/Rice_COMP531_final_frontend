@@ -5,16 +5,17 @@
 $bg: #e0e0e0; // Example background color
 
 .leftBar {
+  flex: 3;
+
   @include themify($themes) {
-    flex: 3;
+    background-color: themed("bg");
+    color: themed("textColor");
     position: sticky;
     top: 50px;
     height: calc(100vh - 50px);
-    overflow: scroll;
-    background-color: themed("bg");
-    color: themed("textColor");
+    overflow-y: scroll;
 
-    @include mobile{
+    @include mobile {
       display: none;
     }
 
@@ -22,56 +23,23 @@ $bg: #e0e0e0; // Example background color
       display: none;
     }
 
-    .container {
-      padding: 20px;
-
-      hr {
-        margin: 20px 0px;
-        border: none;
-        height: 0.5px;
-        background-color: themed("border");
-      }
-
-      .menu {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-
-        span {
-          font-size: 12px;
-        }
-
-        .user {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-
-          img {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            object-fit: cover;
-          }
-
-          span {
-            font-size: 14px;
-          }
-        }
-
-        .item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-
-          img {
-            width: 30px;
-          }
-
-          span {
-            font-size: 14px;
-          }
-        }
-      }
+    .h5 {
+      color: gray;
     }
   }
+}
+
+.customTitle {
+  font-size: 15px;
+  color: black !important;
+  font-weight: bold;
+}
+
+.customContainer {
+  background-color: white;
+  margin-bottom: 1.5rem;
+  border-radius: 20px;
+  align-items: center;
+  padding: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }

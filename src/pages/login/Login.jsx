@@ -1,15 +1,11 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import "./login.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from "styled-components";
-import { AuthContext } from "../../context/authContext";
-import DatePicker from "react-datepicker";
 import { useDispatch } from "react-redux";
 import { login } from "../../actions/authActions"; // Assuming you've stored it in an 'actions' folder
-import profilePic from "../../assets/profile.png";
-
+import GoogleIcon from "@mui/icons-material/Google";
 // Styled Components for the buttons
 const LoginButton = styled.button`
   background-color: #938eef;
@@ -40,57 +36,90 @@ const RegisterButton = styled(LoginButton)`
   }
 `;
 
+const ThirdPartyLoginButton = styled(LoginButton)`
+  background-color: #3b5998; // Adjust the color as needed
+  margin-right: 20px; // Increase the margin for a larger gap
+
+  &:hover {
+    background-color: #324c85; // Adjust the hover color as needed
+  }
+`;
+
 const Login = () => {
-  //const { login: handleLogin } = useContext(AuthContext); // Renamed for clarity
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginError, setLoginError] = useState(""); // State to store login error message
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const handleThirdPartyLogin = () => {
+    // Implement the third-party login logic here
+    // Redirect to the '/auth/google' route on your server
+    window.location.href = "http://localhost:3000/auth/google/callback";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch(
-      `https://jsonplaceholder.typicode.com/users?username=${username}`
-    );
-    const users = await response.json();
-    console.log("Parsed Users:", users);
-    const user = users[0];
+    // Check for username and password only if the standard login button was clicked
+    if (
+      e.nativeEvent.submitter ===
+        document.getElementById("standardLoginButton") &&
+      (!username || !password)
+    ) {
+      setLoginError("Username and password are required.");
+      return;
+    }
+    try {
+      const loginResponse = await fetch("http://localhost:3000/login", {
+        method: "POST",
 
-    if (user && user.address.street === password) {
-      console.log("in");
-      if (user) {
-        // Transform the user object
-        //user.name=user.username;
-        user.zipcode = user.address.zipcode;
-        user.password = user.address.street;
-        delete user.address;
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+        // mode: "no-cors",
+        credentials: "include",
+      });
+
+      const loginData = await loginResponse.json();
+      if (loginResponse.ok) {
+        // Fetch avatar
+        const avatarResponse = await fetch(
+          `http://localhost:3000/avatar/${username}`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        let avatarUrl = null;
+        if (avatarResponse.ok) {
+          const avatarData = await avatarResponse.json();
+          avatarUrl = avatarData.avatar;
+        }
+
+        // Update Redux store with user data and avatar
+        dispatch(login({ ...loginData, avatar: avatarUrl })); // Assuming your login action can handle this data structure
+
+        navigate("/");
+      } else {
+        console.error("Login error:", loginData.error);
+        setLoginError(loginData.error || "Invalid login credentials");
       }
-
-      const userDetails = {
-        id: user.id,
-        username: username,
-        password: user.password,
-        zipcode: user.zipcode,
-        email: user.email,
-        phone: user.phone,
-        profilePic: profilePic,
-        // ... other attributes
-      };
-
-      console.log("before");
-      dispatch(login(userDetails));
-      console.log("after");
-      navigate("/"); // Removed the duplicate navigate call
-    } else {
-      alert("Incorrect username or password");
+    } catch (error) {
+      console.error("Network error:", error);
+      setLoginError("Network error. Please try again later.");
     }
   };
 
-  return isLoggedIn ? (
-    <div className="text-center mt-5">Welcome, {username}!</div>
-  ) : (
+  return (
     <div className="register d-flex align-items-center vh-100">
       <div className="card mx-auto" style={{ maxWidth: "800px" }}>
         <div className="row g-0">
@@ -98,11 +127,16 @@ const Login = () => {
             <h2 className="display-1 mb-4">Hello World.</h2>
             <span className="mb-3">First time?</span>
             <Link to="/register">
-              <RegisterButton>REGISTER</RegisterButton>
+              <RegisterButton>Register</RegisterButton>
             </Link>
           </div>
           <div className="col-md-6 d-flex flex-column justify-content-center p-5">
             <h2 className="mb-4">Login</h2>
+            {loginError && (
+              <div className="alert alert-danger" role="alert">
+                {loginError}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <input
@@ -117,13 +151,22 @@ const Login = () => {
                 <input
                   type="password"
                   className="form-control w-100"
-                  placeholder="Password (Street Name)"
+                  placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="d-flex justify-content-center">
-                <LoginButton type="submit">LOGIN</LoginButton>
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <ThirdPartyLoginButton onClick={handleThirdPartyLogin}>
+                    <GoogleIcon>&#xe8d4;</GoogleIcon> Login with Google
+                  </ThirdPartyLoginButton>
+                </div>
+                <div>
+                  <LoginButton id="standardLoginButton" type="submit">
+                    Login
+                  </LoginButton>
+                </div>
               </div>
             </form>
           </div>

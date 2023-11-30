@@ -7,6 +7,8 @@ import Friend from "../../assets/friend.png";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../reducer/authReducer";
+import { addPost } from "../../actions/postsActions";
+import { set } from "date-fns";
 
 // Styled Components for the buttons
 const BaseButton = styled.button`
@@ -47,7 +49,7 @@ const Share = ({ addNewPost }) => {
   const currentUser = useSelector(selectUser);
   const [inputText, setInputText] = useState("");
   const [selectedImage, setSelectedImage] = useState(null); // State for the selected image
-  const [uploadedFileName, setUploadedFileName] = useState(null); // State to store the uploaded file name
+  const [uploadedFile, setUploadedFile] = useState(null); // State to store the uploaded file
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
@@ -59,33 +61,52 @@ const Share = ({ addNewPost }) => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result);
+        setUploadedFile(file); // Store the File object
       };
       reader.readAsDataURL(file);
-
-      // Setting the file name to the state
-      setUploadedFileName(file.name);
     }
   };
 
   const handlePostClick = () => {
-    if (inputText.trim() !== "" || selectedImage) {
-      //need to add text, cannot be image only
-      const newPost = {
-        id: Date.now(),
-        name: currentUser.username,
-        userId: currentUser.id,
-        profilePic: currentUser.profilePic,
-        desc: inputText,
-        img: selectedImage,
-      };
+    if (inputText.trim() !== "" || uploadedFile) {
+      const formData = new FormData();
+      formData.append("text", inputText);
+      if (uploadedFile) {
+        formData.append("image", uploadedFile); // Use the stored File object
+      }
 
-      addNewPost(newPost);
-      clearInputText();
-      setSelectedImage(null); // Reset the selected image after posting
+      fetch("http://localhost:3000/article", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const newPost = {
+            author: currentUser.username,
+            avatar: currentUser.avatar,
+            text: inputText,
+            image: data.articles[0].image,
+            date: new Date(data.articles[0].date).toISOString(),
+          };
+          dispatch(addPost(newPost));
+          clearInputText();
+          setSelectedImage(null);
+          setUploadedFile(null); // Reset the uploaded file
+        })
+        .catch((error) => {
+          console.error("Error creating new article:", error);
+        });
     }
   };
 
@@ -93,7 +114,7 @@ const Share = ({ addNewPost }) => {
     <div className="share">
       <div className="container">
         <div className="top">
-          <img src={currentUser.profilePic} alt="" />
+          <img src={currentUser.avatar} alt="" />
           <input
             type="text"
             placeholder={`What's on your mind, ${currentUser.username}?`}
@@ -114,7 +135,7 @@ const Share = ({ addNewPost }) => {
               <div className="item">
                 <PhotoCamera />
                 <span>Add Image</span>
-                {uploadedFileName && <span>({uploadedFileName})</span>}{" "}
+                {uploadedFile && <span>({uploadedFile.name})</span>}{" "}
               </div>
             </label>
           </div>

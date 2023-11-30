@@ -182,18 +182,60 @@ const EditProfileModal = ({ isOpen, onRequestClose, user, onUpdate }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      //!userNameError &&
-      !emailError &&
-      !phoneError &&
-      !zipCodeError &&
-      !passwordError
-    ) {
-      onUpdate(formData);
+    // Assume validation checks are already done
+    if (!emailError && !phoneError && !zipCodeError && !passwordError) {
+      const updates = [];
+
+      if (formData.email !== user.email) {
+        updates.push(updateUserField("/email", { email: formData.email }));
+      }
+      if (formData.zipcode !== user.zipcode) {
+        updates.push(
+          updateUserField("/zipcode", { zipcode: formData.zipcode })
+        );
+      }
+
+      if (formData.phone !== user.phone) {
+        updates.push(updateUserField("/phone", { phone: formData.phone }));
+      }
+
+      if (formData.password !== user.password) {
+        updates.push(
+          updateUserField("/password", { password: formData.password })
+        );
+      }
+
+      try {
+        // Wait for all updates to complete
+        await Promise.all(updates);
+        console.log("All updates completed");
+        onUpdate({ ...user, ...formData }); // Assuming you want to update the local state
+        onRequestClose(); // Close the modal after successful update
+      } catch (error) {
+        console.error("Error updating profile:", error.message);
+      }
     }
+  };
+
+  // Function to make a PUT request to update a user field
+  const updateUserField = async (endpoint, data) => {
+    const response = await fetch(`http://localhost:3000${endpoint}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
   };
 
   return (

@@ -3,31 +3,15 @@
 import {
   ADD_POST,
   SET_POSTS,
+  UPDATE_POST,
   ADD_COMMENT,
   SET_COMMENTS,
+  RESET_COMMENTS,
 } from "../actions/postsActions";
 
 const initialState = {
   posts: [],
-  comments: [
-    {
-      id: 1,
-      desc: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem nequeaspernatur ullam aperiam. Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem nequeaspernatur ullam aperiam",
-      name: "John Doe",
-      userId: 1,
-      profilePicture:
-        "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    },
-    {
-      id: 2,
-      desc: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem nequeaspernatur ullam aperiam",
-      name: "Jane Doe",
-      userId: 2,
-      profilePicture:
-        "https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    },
-  ], // Add this line for comments
-  // ... other state
+  comments: {},
 };
 
 const postsReducer = (state = initialState, action) => {
@@ -42,22 +26,97 @@ const postsReducer = (state = initialState, action) => {
         ...state,
         posts: action.payload,
       };
-    case ADD_COMMENT: // New case handler for adding a comment
+
+    case UPDATE_POST:
+      const updatedPosts = state.posts.map((post) =>
+        post.id === action.payload.customId ? action.payload : post
+      );
       return {
         ...state,
-        comments: [action.payload, ...state.comments],
+        posts: updatedPosts,
       };
-    case SET_COMMENTS: // New case handler for setting comments
+
+    /*case ADD_COMMENT:
+      console.log("Current state:", state);
+      console.log("Action payload:", action.payload);
+
+      const { articleId: addCommentArticleId, comment } = action.payload;
+      const currentComments = state.comments[addCommentArticleId] || [];
+      console.log("Current comments for article:", currentComments.comments);
+      console.log(typeof currentComments.comments);
+      // Initialize as an empty array if not already an array
+      const existingComments = Array.isArray(
+        state.comments[addCommentArticleId]
+      )
+        ? state.comments[addCommentArticleId]
+        : [];
+
       return {
         ...state,
-        comments: action.payload,
+        comments: {
+          ...state.comments,
+          [addCommentArticleId]: [...existingComments, comment],
+        },
       };
-    // ... other case handlers
+
+    case SET_COMMENTS:
+      console.log("action.payload", action.payload);
+      const { articleId: idForSet, comments: newComments } = action.payload; // Assuming payload contains articleId and comments array
+      return {
+        ...state,
+        comments: {
+          ...state.comments,
+          [idForSet]: newComments,
+        },
+      };*/
+    case SET_COMMENTS:
+      const { articleId: idForSet, comments: updatedComments } = action.payload;
+
+      const updatedComment = state.comments[idForSet].map((comment) =>
+        comment.customId === updatedComments.comments.customId
+          ? updatedComments.comments
+          : comment
+      );
+
+      return {
+        ...state,
+        comments: {
+          ...state.comments,
+          [idForSet]: updatedComments.comments,
+        },
+      };
+
+    case ADD_COMMENT:
+      const { articleId: idForAddComment, comment: newComment } =
+        action.payload;
+      const existingCommentsForAdd = Array.isArray(
+        state.comments[idForAddComment]
+      )
+        ? state.comments[idForAddComment]
+        : [];
+      return {
+        ...state,
+        comments: {
+          ...state.comments,
+          [idForAddComment]: [...existingCommentsForAdd, newComment],
+        },
+      };
+
+    case RESET_COMMENTS:
+      return {
+        ...state,
+        comments: [], // Reset comments to an empty array
+      };
     default:
       return state;
   }
 };
 
+//export const selectPosts = (state) => state.posts.posts;
 export const selectPosts = (state) => state.posts.posts;
-export const selectComments = (state) => state.posts.comments;
+export const selectComments = (state, articleId) => {
+  const commentsByArticle = state.posts.comments[articleId];
+  return commentsByArticle || []; // Return an empty array if no comments are found
+};
+//export const selectComments = (state) => state.posts.comments;
 export default postsReducer;

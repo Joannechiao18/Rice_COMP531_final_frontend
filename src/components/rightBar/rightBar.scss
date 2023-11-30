@@ -1,19 +1,19 @@
 @import "../../style.scss";
 
 .rightBar {
-  flex: 3;
+  flex: 2;
   @include themify($themes) {
     background-color: themed("bg");
     color: themed("textColor");
     position: sticky;
-    top: 50px;
+
     height: calc(100vh - 50px);
     overflow-y: scroll;
 
     .h5 {
       color: gray;
     }
-    
+
     & img {
       width: 40px;
       height: 40px;
@@ -28,19 +28,18 @@
 
   // Tablet styles
   @media (min-width: 768px) and (max-width: 1024px) {
-    display: block; // or whatever style you want for the tablet view
-    width: 60%;  // You can adjust this to whatever width you'd like
+    display: block;
+    width: 100%; // Adjusted to full width for tablet view
     // Add any other styles specific for tablet
   }
 
   // Desktop styles
   @media (min-width: 1025px) {
     display: block;
-    // Removed width: 30% since max-width will handle the sizing
+    width: 100%; // Adjusted to full width for desktop view
     height: calc(100vh - 50px);
     // Add any other styles specific for desktop
   }
-
 }
 
 .customTitle {
@@ -53,7 +52,9 @@
   background-color: white;
   margin-bottom: 1.5rem;
   border-radius: 20px;
+  margin-left: 0; // Adjusted to 0 to remove left margin
+  margin-right: 0; // Added to remove right margin
   padding: 1rem;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  width: 100%; // Ensure it takes full width of its parent
 }
-

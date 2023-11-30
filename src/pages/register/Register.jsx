@@ -282,18 +282,41 @@ const Register = () => {
       !confirmPasswordError
     ) {
       const user = {
-        id: 11,
         username: username,
         email: email,
         phone: phone,
-        //age: birthDate,
+        dob: birthDate,
         zipcode: zipcode,
         password: password,
-        profilePic: profilePic,
       };
 
-      dispatch(register(user));
-      navigate("/");
+      //dispatch(register(user));
+      //navigate("/");
+      try {
+        const response = await fetch(
+          //"https://yw187server-3d9494142af2.herokuapp.com/register",
+          "http://localhost:3000/register",
+          {
+            // Replace with your backend URL
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(user),
+          }
+        );
+
+        const data = await response.json();
+        if (response.ok) {
+          navigate("/"); // Redirect or update UI
+        } else {
+          // Handle errors
+          console.error("Registration error:", data.error);
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+      }
     }
   };
 
@@ -305,7 +328,7 @@ const Register = () => {
             <h2 className="display-1 mb-4">Hello World.</h2>
             <span className="mb-3">Do you have an account?</span>
             <Link to="/login">
-              <LoginButton>LOGIN</LoginButton>
+              <LoginButton>Login</LoginButton>
             </Link>
           </div>
           <div className="col-md-6 d-flex flex-column justify-content-center p-5">
