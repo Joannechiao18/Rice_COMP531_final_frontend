@@ -70,6 +70,7 @@ const Posts = () => {
       );
 
       const data = await response.json();
+      console.log({ data });
 
       dispatch(setPosts(data.articles));
       setTotalPages(data.articles.length); // Set the total pages (assuming the server sends this info)
