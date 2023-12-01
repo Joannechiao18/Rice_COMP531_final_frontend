@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../reducer/authReducer";
 import { addPost } from "../../actions/postsActions";
-import { set } from "date-fns";
+import { selectPosts } from "../../reducer/postsReducer";
 
 // Styled Components for the buttons
 const BaseButton = styled.button`
@@ -50,6 +50,7 @@ const Share = ({ addNewPost }) => {
   const [inputText, setInputText] = useState("");
   const [selectedImage, setSelectedImage] = useState(null); // State for the selected image
   const [uploadedFile, setUploadedFile] = useState(null); // State to store the uploaded file
+  const posts = useSelector(selectPosts);
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
@@ -98,11 +99,12 @@ const Share = ({ addNewPost }) => {
             text: inputText,
             image: data.articles[0].image,
             date: new Date(data.articles[0].date).toISOString(),
+            customId: posts[0] && posts[0].customId ? posts[0].customId + 1 : 1,
           };
           dispatch(addPost(newPost));
           clearInputText();
           setSelectedImage(null);
-          setUploadedFile(null); // Reset the uploaded file
+          setUploadedFile(null);
         })
         .catch((error) => {
           console.error("Error creating new article:", error);

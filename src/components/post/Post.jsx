@@ -21,6 +21,7 @@ const Post = ({ post }) => {
   const [timeAgo, setTimeAgo] = useState("");
   const dispatch = useDispatch();
   const followedUsers = useSelector(selectFollowedUsers);
+  const posts = useSelector(selectPosts);
 
   useEffect(() => {
     const updateTimeInterval = 60000; // 1 minute
@@ -55,9 +56,10 @@ const Post = ({ post }) => {
   };
 
   const handleEditSave = async () => {
+    console.log("handle edit save", post.customId);
     try {
       const response = await fetch(
-        `http://localhost:3000/articles/${post.id}`,
+        `http://localhost:3000/articles/${post.customId}`,
         {
           method: "PUT",
           credentials: "include",
@@ -65,7 +67,7 @@ const Post = ({ post }) => {
             "Content-Type": "application/json",
           },
           //add comment id
-          body: JSON.stringify({ text: editedText, articleId: post.id }),
+          body: JSON.stringify({ text: editedText, articleId: post.customId }),
         }
       );
 
@@ -149,8 +151,7 @@ const Post = ({ post }) => {
             </>
           )}
         </div>
-        {commentOpen && <Comments articleId={post.id} />}{" "}
-        {/* Pass articleId here */}
+        {commentOpen && <Comments articleId={post.customId} />} {}
       </div>
     </div>
   );

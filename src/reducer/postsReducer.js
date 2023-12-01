@@ -29,46 +29,13 @@ const postsReducer = (state = initialState, action) => {
 
     case UPDATE_POST:
       const updatedPosts = state.posts.map((post) =>
-        post.id === action.payload.customId ? action.payload : post
+        post.customId === action.payload.customId ? action.payload : post
       );
       return {
         ...state,
         posts: updatedPosts,
       };
 
-    /*case ADD_COMMENT:
-      console.log("Current state:", state);
-      console.log("Action payload:", action.payload);
-
-      const { articleId: addCommentArticleId, comment } = action.payload;
-      const currentComments = state.comments[addCommentArticleId] || [];
-      console.log("Current comments for article:", currentComments.comments);
-      console.log(typeof currentComments.comments);
-      // Initialize as an empty array if not already an array
-      const existingComments = Array.isArray(
-        state.comments[addCommentArticleId]
-      )
-        ? state.comments[addCommentArticleId]
-        : [];
-
-      return {
-        ...state,
-        comments: {
-          ...state.comments,
-          [addCommentArticleId]: [...existingComments, comment],
-        },
-      };
-
-    case SET_COMMENTS:
-      console.log("action.payload", action.payload);
-      const { articleId: idForSet, comments: newComments } = action.payload; // Assuming payload contains articleId and comments array
-      return {
-        ...state,
-        comments: {
-          ...state.comments,
-          [idForSet]: newComments,
-        },
-      };*/
     case SET_COMMENTS:
       const { articleId: idForSet, comments: updatedComments } = action.payload;
 

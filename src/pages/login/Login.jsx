@@ -81,7 +81,6 @@ const Login = () => {
           username: username,
           password: password,
         }),
-        // mode: "no-cors",
         credentials: "include",
       });
 
@@ -107,7 +106,6 @@ const Login = () => {
 
         // Update Redux store with user data and avatar
         dispatch(login({ ...loginData, avatar: avatarUrl })); // Assuming your login action can handle this data structure
-
         navigate("/");
       } else {
         console.error("Login error:", loginData.error);

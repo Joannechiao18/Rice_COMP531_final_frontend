@@ -1,5 +1,6 @@
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
+import PostLogin from "./pages/post-login/postLogin"; // Import your PostLogin component
 import {
   BrowserRouter as Router,
   Routes,
@@ -92,6 +93,8 @@ function App() {
   const { darkMode } = useContext(DarkModeContext);
   const [filterTerm, setFilterTerm] = useState("");
 
+  console.log("currentUser in app.js", currentUser);
+
   return (
     <FilterTermContext.Provider value={{ filterTerm, setFilterTerm }}>
       <Router>
@@ -99,6 +102,7 @@ function App() {
           {/* Unprotected Routes */}
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="post-login" element={<PostLogin />} />
 
           {/* Protected Routes */}
           <Route
@@ -106,9 +110,8 @@ function App() {
             element={currentUser ? <Layout /> : <Navigate to="/login" />}
           >
             <Route index element={<Home />} />
-            <Route path="profile/:id" element={<Profile />} />
+            <Route path="profile/:user" element={<Profile />} />
           </Route>
-
           {/* Catch-all redirect to force users to login if they're not authenticated */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>

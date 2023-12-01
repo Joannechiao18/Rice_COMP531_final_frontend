@@ -53,6 +53,8 @@ const RightBar = () => {
   const [followedUsersHeadline, setfollowedUsersHeadline] = useState([]);
   const [followedUsersObjects, setfollowedUsersObjects] = useState([]);
 
+  //console.log(currentUser);
+
   const [message, setMessage] = useState(null);
 
   const getFollowingDetails = async (followingUsernames) => {
@@ -118,7 +120,6 @@ const RightBar = () => {
         dispatch(setFollowedUsers(usersWithDetails));
         setfollowedUsersObjects(usersWithDetails);
 
-        console.log({ followedUsersObjects });
         //console.log("followedUsersObjects", followedUsersObjects);
       } catch (error) {
         console.error("Error fetching following users:", error);
@@ -153,8 +154,6 @@ const RightBar = () => {
       dispatch(
         setFollowedUsers(await getFollowingDetails(updatedUserInfo.following))
       );
-
-      console.log({ followedUsersObjects });
 
       // Update the local state to reflect changes without refreshing
       setfollowedUsersObjects((prevUsers) =>

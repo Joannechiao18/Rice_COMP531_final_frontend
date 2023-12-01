@@ -102,7 +102,7 @@ const Posts = () => {
       <div className="row">
         {/* Posts mapping */}
         {posts.map((post) => (
-          <div className="col-12 mb-5" key={post.id}>
+          <div className="col-12 mb-5" key={post.customId}>
             <Post post={post} />
           </div>
         ))}

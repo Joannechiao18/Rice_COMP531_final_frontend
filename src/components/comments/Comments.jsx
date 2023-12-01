@@ -44,13 +44,11 @@ const ActionButton = styled(BaseButton)`
 `;
 
 const Comments = ({ articleId }) => {
-  // Receive articleId as a prop
   const dispatch = useDispatch();
   const comments = useSelector((state) => selectComments(state, articleId));
   const currentUser = useSelector(selectUser);
   const [inputValue, setInputValue] = useState("");
   const followedUsers = useSelector(selectFollowedUsers);
-
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentBody, setEditedCommentBody] = useState("");
 
@@ -61,7 +59,6 @@ const Comments = ({ articleId }) => {
         author: currentUser.username,
         body: inputValue,
         avatar: currentUser.avatar,
-        // Add any other fields you need
       };
 
       try {
@@ -73,10 +70,8 @@ const Comments = ({ articleId }) => {
             headers: {
               "Content-Type": "application/json",
             },
-            //...newComment,
             body: JSON.stringify({
               comment: newComment,
-              //text: inputValue,
               articleId: articleId,
             }),
           }
