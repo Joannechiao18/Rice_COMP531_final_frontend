@@ -1,4 +1,4 @@
-@import "../../style.scss"; // your global styles
+@import "../../style.scss";  // your global styles
 
 // Define or adjust these default values
 $border-color: #e0e0e0;
@@ -8,11 +8,11 @@ $search-icon-color: #938eef;
 $search-btn-border-color: #938eef;
 
 .navbar .d-flex.mx-auto .form-control {
-  width: 400px; // Set the desired width here
+  width: 400px;  // Set the desired width here
   border-radius: 20px;
 
   @include mobile {
-    width: 80%; // Adjust as desired for mobile view
+      width: 80%;  // Adjust as desired for mobile view
   }
 }
 
@@ -24,7 +24,7 @@ $search-btn-border-color: #938eef;
 
   .navbar-brand {
     font-weight: bold;
-    font-size: 25px;
+    font-size: 20px;
     color: $logo-color;
   }
 
@@ -57,6 +57,7 @@ $search-btn-border-color: #938eef;
   }
 }
 
+
 .search-btn {
   border-color: $search-icon-color;
   background-color: transparent;
@@ -72,7 +73,7 @@ $search-btn-border-color: #938eef;
   &:hover,
   &:focus,
   &:active {
-    border-color: transparent;
+    border-color: transparent;  
     background-color: $search-icon-color;
 
     svg {
@@ -83,7 +84,7 @@ $search-btn-border-color: #938eef;
 }
 
 .profile-dropdown .profile-toggle span {
-  margin-left: -0.5em;
+  margin-left: -.5em; 
   font-weight: bold;
   font-size: large;
   color: black;
@@ -119,12 +120,12 @@ $search-btn-border-color: #938eef;
 
   &:focus,
   &:hover {
-    // Updated the box-shadow to make it more rounded
-    box-shadow: 0 0 2px 2px rgba(237, 235, 235, 0.1),
-      0 0 2px 2px rgba(208, 202, 202, 0.1);
-    border-radius: 8px; // This will make the shadow appear more rounded
+      // Updated the box-shadow to make it more rounded
+      box-shadow: 0 0 2px 2px rgba(237, 235, 235, 0.1), 0 0 2px 2px rgba(208, 202, 202, 0.1);
+      border-radius: 8px;  // This will make the shadow appear more rounded
   }
 }
+
 
 .profile-dropdown .dropdown-menu .dropdown-header {
   display: flex;
@@ -158,6 +159,7 @@ $search-btn-border-color: #938eef;
 .custom-dropdown-menu {
   width: 200px; // or whatever width you feel looks best
   .dropdown-item {
-    flex-direction: row; // Since we're using flex on the dropdown items, ensure they align horizontally
+      flex-direction: row;  // Since we're using flex on the dropdown items, ensure they align horizontally
   }
 }
+

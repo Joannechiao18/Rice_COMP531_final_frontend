@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import "./comments.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../reducer/authReducer";
-import { addComment, setComments } from "../../actions/postsActions";
+import {
+  addComment,
+  setComments,
+  updateComment,
+} from "../../actions/postsActions";
 import { selectComments } from "../../reducer/postsReducer";
 import { selectFollowedUsers } from "../../reducer/followedUsersReducer";
 import styled from "styled-components";
 import EditIcon from "@mui/icons-material/Edit";
+import { selectPosts } from "../../reducer/postsReducer";
 
 const BaseButton = styled.button`
   border: none;
@@ -51,6 +56,16 @@ const Comments = ({ articleId }) => {
   const followedUsers = useSelector(selectFollowedUsers);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editedCommentBody, setEditedCommentBody] = useState("");
+  const posts = useSelector(selectPosts);
+
+  // Fetch comments when the component mounts
+  useEffect(() => {
+    // Extract comments for the current article from the posts state
+    const currentPost = posts.find((post) => post.customId === articleId);
+    if (currentPost && currentPost.comments) {
+      dispatch(setComments(articleId, currentPost.comments));
+    }
+  }, [articleId, posts, dispatch]);
 
   const handleSendClick = async () => {
     if (inputValue.trim() !== "") {
@@ -63,7 +78,7 @@ const Comments = ({ articleId }) => {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/articles/${articleId}`,
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/articles/${articleId}`,
           {
             method: "PUT",
             credentials: "include",
@@ -105,43 +120,81 @@ const Comments = ({ articleId }) => {
     setEditedCommentBody("");
   };
 
-  const handleEditSave = async (commentId) => {
-    if (editedCommentBody.trim() !== "") {
-      const updatedComment = {
-        customId: commentId,
-        author: currentUser.username,
-        body: editedCommentBody,
-        avatar: currentUser.avatar,
-      };
-      try {
-        const response = await fetch(
-          `http://localhost:3000/articles/${articleId}`,
-          {
-            method: "PUT",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              comment: updatedComment,
-              articleId: articleId,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to update the comment.");
+  const getCommentAuthor = async (articleId, commentId) => {
+    try {
+      const response = await fetch(
+        `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/getCommentAuthor/${articleId}/${commentId}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-        const updatedComments = await response.json();
-
-        dispatch(setComments(articleId, updatedComments));
-
-        setEditingCommentId(null);
-        setEditedCommentBody("");
-      } catch (error) {
-        console.error("Error updating comment:", error);
+      if (!response.ok) {
+        throw new Error("Failed to get comment author.");
       }
+
+      const data = await response.json();
+      return data.username; // This will be the author's username
+    } catch (error) {
+      console.error("Error getting comment author:", error);
+      return null; // Handle the error or return a default value
+    }
+  };
+
+  const handleEditSave = async (commentId) => {
+    // You can call this function like this:
+    const authorUsername = await getCommentAuthor(articleId, commentId);
+
+    if (authorUsername === currentUser.username) {
+      if (editedCommentBody.trim() !== "") {
+        const updatedComment = {
+          customId: commentId,
+          author: currentUser.username,
+          body: editedCommentBody,
+          avatar: currentUser.avatar,
+        };
+        try {
+          const response = await fetch(
+            `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/articles/${articleId}`,
+            {
+              method: "PUT",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                comment: updatedComment,
+                articleId: articleId,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to update the comment.");
+          }
+
+          const updatedComments = await response.json();
+
+          dispatch(
+            updateComment(articleId, commentId, updatedComments.comments)
+          );
+
+          //dispatch(setComments(articleId, updatedComments));
+
+          setEditingCommentId(null);
+          setEditedCommentBody("");
+        } catch (error) {
+          console.error("Error updating comment:", error);
+        }
+      }
+    } else {
+      setEditingCommentId(null);
+      setEditedCommentBody("");
+      alert("You cannot edit someone else's comment.");
     }
   };
 

@@ -38,12 +38,35 @@ const EditButton = styled(BaseButton)`
   }
 `;
 
+const LinkButton = styled(BaseButton)`
+  color: white;
+  background-color: #3b5998; // Color for Link Accounting button
+  margin-right: 5px;
+
+  &:hover {
+    background-color: #324c85;
+  }
+`;
+
+const UnlinkButton = styled(LinkButton)`
+  width: auto;
+  background-color: #d36c5c; // Color for Unlink Accounting button
+
+  &:hover {
+    background-color: #a22b2b;
+  }
+`;
+
 const Profile = () => {
   const currentUser = useSelector(selectUser) || {};
 
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+
+  // Add state variables for linking/unlinking accounting
+  const [isAccountingLinked, setIsAccountingLinked] = useState(false);
+  const [isLinkingInProgress, setIsLinkingInProgress] = useState(false);
 
   const [profileData, setProfileData] = useState({
     username: "",
@@ -60,13 +83,10 @@ const Profile = () => {
       try {
         const username = currentUser.username;
 
-        console.log("username", username);
-
         const fetchJsonData = async (url) => {
           const response = await fetch(url, {
             method: "GET",
             credentials: "include",
-            //mode: "cors",
             headers: {
               "Content-Type": "application/json",
             },
@@ -84,34 +104,34 @@ const Profile = () => {
         // Fetch user details (email, phone, etc.)
         const emailData = await fetchJsonData(
           //`https://yw187server-3d9494142af2.herokuapp.com/email/${username}`
-          `http://localhost:3000/email/${username}`
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/email/${username}`
         );
 
         const dobData = await fetchJsonData(
           //`https://yw187server-3d9494142af2.herokuapp.com/email/${username}`
-          `http://localhost:3000/dob/${username}`
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/dob/${username}`
         );
 
         const phoneData = await fetchJsonData(
           //`https://yw187server-3d9494142af2.herokuapp.com/phone/${username}`
-          `http://localhost:3000/phone/${username}`
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/phone/${username}`
         );
         const zipcodeData = await fetchJsonData(
           //`https://yw187server-3d9494142af2.herokuapp.com/zipcode/${username}`
-          `http://localhost:3000/zipcode/${username}`
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/zipcode/${username}`
         );
         const avatarData = await fetchJsonData(
-          `http://localhost:3000/avatar/${username}`
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/avatar/${username}`
         );
 
         // Update state with the fetched data
         setProfileData({
           username: username,
           email: emailData.email,
-          dob: dobData.dob,
-          phone: phoneData.phone,
-          zipcode: zipcodeData.zipcode,
-          avatar: avatarData.avatar,
+          dob: dobData.dob || "",
+          phone: phoneData.phone || "",
+          zipcode: zipcodeData.zipcode || "",
+          avatar: avatarData.avatar || "",
         });
       } catch (error) {
         console.error("Error fetching profile data:", error.message);
@@ -129,18 +149,72 @@ const Profile = () => {
     setIsModalOpen(false);
   };
 
-  const handleUpdateProfile = (formData) => {
-    dispatch(
-      login({
+  const handleUpdateProfile = async (formData) => {
+    const updatedProfileData = {
+      username: formData.username,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      zipcode: formData.zipcode,
+    };
+
+    try {
+      // Make API requests to update user information
+      await Promise.all([
+        // Update zipcode
+        fetch(
+          "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/zipcode",
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              zipcode: updatedProfileData.zipcode,
+            }),
+          }
+        ),
+
+        // Update email
+        fetch("https://ricebookserveryw187-8fbcb305db50.herokuapp.com/email", {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: updatedProfileData.email,
+          }),
+        }),
+
+        // Update phone
+        fetch("https://ricebookserveryw187-8fbcb305db50.herokuapp.com/phone", {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: updatedProfileData.phone,
+          }),
+        }),
+      ]);
+
+      // Create a new object with the updated profile data
+      const updatedUser = {
         ...currentUser,
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        zipcode: formData.zipcode,
-      })
-    );
-    setIsModalOpen(false);
+        ...updatedProfileData,
+      };
+
+      // Dispatch the updated profile data to Redux
+      dispatch(login(updatedUser));
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // Handle error and show a notification to the user
+    }
   };
 
   const handleFileChange = (event) => {
@@ -162,12 +236,17 @@ const Profile = () => {
     formData.append("image", file);
 
     if (file) {
-      const response = await fetch(`http://localhost:3000/avatar`, {
-        method: "PUT",
-        credentials: "include",
+      const response = await fetch(
+        `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/avatar`,
+        {
+          method: "PUT",
+          credentials: "include",
 
-        body: formData,
-      });
+          body: formData,
+        }
+      );
+
+      //傳第二次responese才會是ok問題
 
       if (!response.ok) {
         throw new Error("Failed to update avatar.");
@@ -186,6 +265,40 @@ const Profile = () => {
         ...prevData,
         avatar: updatedData.avatar,
       }));
+    }
+  };
+
+  // Function to handle linking accounting
+  const handleLinkAccounting = async () => {
+    setIsLinkingInProgress(true);
+
+    try {
+      // Replace this with your actual linking logic
+      // Example: const response = await fetch("link_accounting_url", { method: "POST" });
+
+      // If linking is successful, update the state
+      setIsAccountingLinked(true);
+    } catch (error) {
+      console.error("Error linking accounting:", error);
+    } finally {
+      setIsLinkingInProgress(false);
+    }
+  };
+
+  // Function to handle unlinking accounting
+  const handleUnlinkAccounting = async () => {
+    setIsLinkingInProgress(true);
+
+    try {
+      // Replace this with your actual unlinking logic
+      // Example: const response = await fetch("unlink_accounting_url", { method: "POST" });
+
+      // If unlinking is successful, update the state
+      setIsAccountingLinked(false);
+    } catch (error) {
+      console.error("Error unlinking accounting:", error);
+    } finally {
+      setIsLinkingInProgress(false);
     }
   };
 
@@ -248,9 +361,32 @@ const Profile = () => {
             <VisibilityOffIcon />
             {profileData.password && "*".repeat(profileData.password.length)}
             </p>*/}
-          <EditButton onClick={handleEditClick}>Edit</EditButton>
+          <div>
+            <EditButton onClick={handleEditClick}>Edit</EditButton>
+          </div>
+          {/* Place the Link and Unlink buttons in the same line */}
+          <div
+            className="d-flex justify-content-between align-items-center"
+            style={{ marginTop: "10px" }}
+          >
+            <div>
+              <LinkButton
+                onClick={handleLinkAccounting}
+                disabled={isLinkingInProgress}
+              >
+                {isLinkingInProgress ? "Linking..." : "Link Accounting"}
+              </LinkButton>
+            </div>
+            <div>
+              <UnlinkButton
+                onClick={handleUnlinkAccounting}
+                disabled={isLinkingInProgress}
+              >
+                {isLinkingInProgress ? "Unlinking..." : "Unlink Accounting"}
+              </UnlinkButton>
+            </div>
+          </div>
         </div>
-        <div className="col-4 text-center"></div>
       </div>
       <EditProfileModal
         isOpen={isModalOpen}

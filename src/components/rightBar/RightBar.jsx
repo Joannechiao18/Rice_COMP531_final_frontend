@@ -53,8 +53,6 @@ const RightBar = () => {
   const [followedUsersHeadline, setfollowedUsersHeadline] = useState([]);
   const [followedUsersObjects, setfollowedUsersObjects] = useState([]);
 
-  //console.log(currentUser);
-
   const [message, setMessage] = useState(null);
 
   const getFollowingDetails = async (followingUsernames) => {
@@ -62,20 +60,26 @@ const RightBar = () => {
     return Promise.all(
       followingUsernames.map(async (username) => {
         const [headlineResponse, avatarResponse] = await Promise.all([
-          fetch(`http://localhost:3000/headline/${username}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }),
-          fetch(`http://localhost:3000/avatar/${username}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }),
+          fetch(
+            `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/headline/${username}`,
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          ),
+          fetch(
+            `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/avatar/${username}`,
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          ),
         ]);
 
         const headlineData = headlineResponse.ok
@@ -98,7 +102,7 @@ const RightBar = () => {
     const fetchFollowingUsers = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/following/${currentUser.username}`,
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/following/${currentUser.username}`,
           {
             method: "GET",
             credentials: "include",
@@ -119,8 +123,6 @@ const RightBar = () => {
 
         dispatch(setFollowedUsers(usersWithDetails));
         setfollowedUsersObjects(usersWithDetails);
-
-        //console.log("followedUsersObjects", followedUsersObjects);
       } catch (error) {
         console.error("Error fetching following users:", error);
       }
@@ -134,7 +136,7 @@ const RightBar = () => {
   const handleUnfollow = async (userToUnfollow) => {
     try {
       const unfollowResponse = await fetch(
-        `http://localhost:3000/following/${userToUnfollow.username}`,
+        `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/following/${userToUnfollow.username}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -179,7 +181,7 @@ const RightBar = () => {
     if (inputName.trim() !== "") {
       try {
         const followResponse = await fetch(
-          `http://localhost:3000/following/${inputName}`,
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/following/${inputName}`,
           {
             method: "PUT",
             credentials: "include",
@@ -194,8 +196,6 @@ const RightBar = () => {
         }
 
         const updatedUserInfo = await followResponse.json();
-
-        console.log({ updatedUserInfo });
 
         dispatch(
           setFollowedUsers(await getFollowingDetails(updatedUserInfo.following))

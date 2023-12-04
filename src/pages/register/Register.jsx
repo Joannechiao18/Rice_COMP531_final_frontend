@@ -295,7 +295,7 @@ const Register = () => {
       try {
         const response = await fetch(
           //"https://yw187server-3d9494142af2.herokuapp.com/register",
-          "http://localhost:3000/register",
+          "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/register",
           {
             // Replace with your backend URL
             method: "POST",

@@ -56,30 +56,37 @@ const Post = ({ post }) => {
   };
 
   const handleEditSave = async () => {
-    console.log("handle edit save", post.customId);
     try {
-      const response = await fetch(
-        `http://localhost:3000/articles/${post.customId}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          //add comment id
-          body: JSON.stringify({ text: editedText, articleId: post.customId }),
+      if (post.author === currentUser.username) {
+        const response = await fetch(
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/articles/${post.customId}`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: editedText,
+              articleId: post.customId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update the post.");
         }
-      );
 
-      if (!response.ok) {
-        throw new Error("Failed to update the post.");
+        const updatedPost = await response.json();
+
+        dispatch(updatePost(updatedPost));
+
+        setEditMode(false);
+      } else {
+        // Show a Bootstrap alert or handle it in your preferred way
+        alert("You cannot edit someone else's post.");
+        setEditMode(false);
       }
-
-      const updatedPost = await response.json();
-
-      dispatch(updatePost(updatedPost));
-
-      setEditMode(false);
     } catch (error) {
       console.error("Error updating post:", error);
     }

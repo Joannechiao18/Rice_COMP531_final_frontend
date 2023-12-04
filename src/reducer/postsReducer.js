@@ -7,6 +7,7 @@ import {
   ADD_COMMENT,
   SET_COMMENTS,
   RESET_COMMENTS,
+  UPDATE_COMMENT,
 } from "../actions/postsActions";
 
 const initialState = {
@@ -36,36 +37,65 @@ const postsReducer = (state = initialState, action) => {
         posts: updatedPosts,
       };
 
-    case SET_COMMENTS:
-      const { articleId: idForSet, comments: updatedComments } = action.payload;
+    case UPDATE_COMMENT:
+      const {
+        articleId: idForUpdate,
+        commentId,
+        comment: updatedCommentsArray,
+      } = action.payload;
 
-      const updatedComment = state.comments[idForSet].map((comment) =>
+      // Ensure that updatedCommentsArray is an array and has at least one element
+      if (
+        Array.isArray(updatedCommentsArray) &&
+        updatedCommentsArray.length > 0
+      ) {
+        const updatedComment = updatedCommentsArray[0]; // Assuming the updated comment is the first element
+
+        if (Array.isArray(state.comments[idForUpdate])) {
+          const newCommentsArray = state.comments[idForUpdate].map((comment) =>
+            comment.customId === commentId ? updatedComment : comment
+          );
+
+          return {
+            ...state,
+            comments: {
+              ...state.comments,
+              [idForUpdate]: newCommentsArray,
+            },
+          };
+        }
+      }
+      return state; // Return the state unchanged if conditions aren't met
+
+    case SET_COMMENTS:
+      const { articleId: idForSet, comments: setAllComments } = action.payload;
+
+      /*const updatedComment = state.comments[idForSet].map((comment) =>
         comment.customId === updatedComments.comments.customId
           ? updatedComments.comments
           : comment
-      );
+      );*/
+
+      //const existingComments = state.comments[idForSet] || [];
 
       return {
         ...state,
         comments: {
           ...state.comments,
-          [idForSet]: updatedComments.comments,
+          [idForSet]: setAllComments, // Directly assign updatedComments to idForSet
         },
       };
 
     case ADD_COMMENT:
       const { articleId: idForAddComment, comment: newComment } =
         action.payload;
-      const existingCommentsForAdd = Array.isArray(
-        state.comments[idForAddComment]
-      )
-        ? state.comments[idForAddComment]
-        : [];
+      // If the article doesn't have any comments yet, initialize its comment array
+      const existingComments = state.comments[idForAddComment] || [];
       return {
         ...state,
         comments: {
           ...state.comments,
-          [idForAddComment]: [...existingCommentsForAdd, newComment],
+          [idForAddComment]: [...existingComments, newComment],
         },
       };
 

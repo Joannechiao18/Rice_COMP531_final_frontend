@@ -39,7 +39,7 @@ const LeftBar = () => {
     const fetchUserHeadline = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/headline/${currentUser.username}`,
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/headline/${currentUser.username}`,
           {
             method: "GET",
             credentials: "include",
@@ -77,14 +77,17 @@ const LeftBar = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/headline`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ headline: editableHeadline }),
-      });
+      const response = await fetch(
+        `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/headline`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ headline: editableHeadline }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update headline.");

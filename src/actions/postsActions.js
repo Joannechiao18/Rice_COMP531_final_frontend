@@ -6,6 +6,7 @@ export const SET_COMMENTS = "SET_COMMENTS";
 export const SET_POSTS = "SET_POSTS";
 export const UPDATE_POST = "UPDATE_POST";
 export const RESET_COMMENTS = "RESET_COMMENTS";
+export const UPDATE_COMMENT = "UPDATE_COMMENT";
 
 export const addPost = (post) => ({
   type: ADD_POST,
@@ -39,6 +40,11 @@ export const addComment = (articleId, comment) => ({
 export const setComments = (articleId, comments) => ({
   type: SET_COMMENTS,
   payload: { articleId, comments },
+});
+
+export const updateComment = (articleId, commentId, comment) => ({
+  type: UPDATE_COMMENT,
+  payload: { articleId, commentId, comment },
 });
 
 // Action Creator

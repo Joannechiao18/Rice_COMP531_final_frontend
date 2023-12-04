@@ -59,7 +59,7 @@ const Posts = () => {
   const fetchCurrentUserPosts = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/articles?username=${currentUser.username}&page=${currentPage}`,
+        `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/articles?username=${currentUser.username}&page=${currentPage}`,
         {
           method: "GET",
           credentials: "include",
@@ -70,7 +70,6 @@ const Posts = () => {
       );
 
       const data = await response.json();
-      console.log({ data });
 
       dispatch(setPosts(data.articles));
       setTotalPages(data.articles.length); // Set the total pages (assuming the server sends this info)
@@ -84,14 +83,30 @@ const Posts = () => {
   }, [currentPage, followedUsers]); // Dependency on currentPage
 
   // Filter and sort posts for display
+  /*const sortedAndFilteredPosts = useMemo(() => {
+    return (Array.isArray(posts) ? posts : [])
+      .filter((post) => {
+        const lowercasedFilterTerm = filterTerm.toLowerCase();
+        return (
+          (post.name &&
+            post.name.toLowerCase().includes(lowercasedFilterTerm)) ||
+          (post.desc &&
+            post.desc.toLowerCase().includes(lowercasedFilterTerm)) ||
+          (post.date && post.date.includes(filterTerm)) || // Filter by date
+          (post.articleId && post.articleId.includes(filterTerm)) // Filter by article id
+        );
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [posts, filterTerm]);*/
   const sortedAndFilteredPosts = useMemo(() => {
     return (Array.isArray(posts) ? posts : [])
       .filter((post) => {
+        const lowercasedFilterTerm = filterTerm.toLowerCase();
         return (
-          (post.name &&
-            post.name.toLowerCase().includes(filterTerm.toLowerCase())) ||
-          (post.desc &&
-            post.desc.toLowerCase().includes(filterTerm.toLowerCase()))
+          (post.author &&
+            post.author.toLowerCase().includes(lowercasedFilterTerm)) ||
+          (post.text && post.text.toLowerCase().includes(lowercasedFilterTerm))
+          // Removed the filters for date and customId
         );
       })
       .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -102,7 +117,7 @@ const Posts = () => {
       <Share />
       <div className="row">
         {/* Posts mapping */}
-        {posts.map((post) => (
+        {sortedAndFilteredPosts.map((post) => (
           <div className="col-12 mb-5" key={post.customId}>
             <Post post={post} />
           </div>

@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import "./login.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from "styled-components";
+import { AuthContext } from "../../context/authContext";
+import DatePicker from "react-datepicker";
 import { useDispatch } from "react-redux";
 import { login } from "../../actions/authActions"; // Assuming you've stored it in an 'actions' folder
 import GoogleIcon from "@mui/icons-material/Google";
@@ -53,9 +56,8 @@ const Login = () => {
   const dispatch = useDispatch();
 
   const handleThirdPartyLogin = () => {
-    // Implement the third-party login logic here
-    // Redirect to the '/auth/google' route on your server
-    window.location.href = "http://localhost:3000/auth/google/callback";
+    window.location.href =
+      "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/auth/google/callback";
   };
 
   const handleSubmit = async (e) => {
@@ -71,24 +73,27 @@ const Login = () => {
       return;
     }
     try {
-      const loginResponse = await fetch("http://localhost:3000/login", {
-        method: "POST",
+      const loginResponse = await fetch(
+        "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/login",
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
-        credentials: "include",
-      });
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+          credentials: "include",
+        }
+      );
 
       const loginData = await loginResponse.json();
       if (loginResponse.ok) {
         // Fetch avatar
         const avatarResponse = await fetch(
-          `http://localhost:3000/avatar/${username}`,
+          `https://ricebookserveryw187-8fbcb305db50.herokuapp.com/avatar/${username}`,
           {
             method: "GET",
             credentials: "include",
@@ -156,7 +161,10 @@ const Login = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <ThirdPartyLoginButton onClick={handleThirdPartyLogin}>
+                  <ThirdPartyLoginButton
+                    type="button"
+                    onClick={handleThirdPartyLogin}
+                  >
                     <GoogleIcon>&#xe8d4;</GoogleIcon> Login with Google
                   </ThirdPartyLoginButton>
                 </div>

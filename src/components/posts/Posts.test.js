@@ -237,8 +237,6 @@ describe("<Posts />", () => {
     );
     store = mockStore({ ...store.getState(), followedUsers: newState });
 
-    //console.log(store.getState().followedUsers);
-
     expect(store.getState().followedUsers).not.toContainEqual({
       id: 2,
       username: "follower_username",
@@ -276,8 +274,6 @@ describe("<Posts />", () => {
     const setPostsActions = actions.filter(
       (action) => action.type === "SET_POSTS"
     );
-
-    console.log(setPostsActions[0].payload);
 
     const hasNewUserPosts = setPostsActions[0].payload.some(
       (post) => post.userId === 2
@@ -378,8 +374,6 @@ describe("<Posts />", () => {
     );
     store = mockStore({ ...store.getState(), followedUsers: newState });
 
-    //console.log(store.getState().followedUsers);
-
     expect(actions.some((action) => action.type === "ADD_FOLLOWED_USER")).toBe(
       true
     );
@@ -419,7 +413,7 @@ describe("<Posts />", () => {
     const setPostsActions = actions.filter(
       (action) => action.type === "SET_POSTS"
     );
-    //console.log(setPostsActions);
+
     expect(setPostsActions[0].payload.length).toBe(3);
 
     const hasNewUserPosts = setPostsActions[0].payload.some(

@@ -81,7 +81,7 @@ const Share = ({ addNewPost }) => {
         formData.append("image", uploadedFile); // Use the stored File object
       }
 
-      fetch("http://localhost:3000/article", {
+      fetch("https://ricebookserveryw187-8fbcb305db50.herokuapp.com/article", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -119,9 +119,11 @@ const Share = ({ addNewPost }) => {
           <img src={currentUser.avatar} alt="" />
           <input
             type="text"
+            width="auto"
             placeholder={`What's on your mind, ${currentUser.username}?`}
             value={inputText}
             onChange={handleInputChange}
+            style={{ width: "400px" }} // Adjust the width as needed
           />
         </div>
         <hr />

@@ -93,8 +93,6 @@ function App() {
   const { darkMode } = useContext(DarkModeContext);
   const [filterTerm, setFilterTerm] = useState("");
 
-  console.log("currentUser in app.js", currentUser);
-
   return (
     <FilterTermContext.Provider value={{ filterTerm, setFilterTerm }}>
       <Router>
