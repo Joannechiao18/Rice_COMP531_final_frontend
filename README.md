@@ -1,1 +1,19 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/qStH2Jh6)
+**netid**: yw187
+
+**User**: 
+
+**Username**: qq
+
+**Password**: 11
+
+---
+
+**frontend**: [https://testcookie.surge.sh](https://testcookie.surge.sh)
+
+**backend**: [https://ricebookserveryw187-8fbcb305db50.herokuapp.com](https://ricebookserveryw187-8fbcb305db50.herokuapp.com)
+
+**SlipDay 1**: 12/2
+
+**SlipDay 2**: 12/3
+
+**SlipDay 3**: 12/4
