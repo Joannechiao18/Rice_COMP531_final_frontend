@@ -23,6 +23,8 @@ const Post = ({ post }) => {
   const followedUsers = useSelector(selectFollowedUsers);
   const posts = useSelector(selectPosts);
 
+  console.log("post", post);
+
   useEffect(() => {
     const updateTimeInterval = 60000; // 1 minute
 

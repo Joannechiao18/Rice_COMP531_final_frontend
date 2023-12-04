@@ -55,6 +55,7 @@ const Posts = () => {
   const [totalPages, setTotalPages] = useState(1); // Assuming total pages info is available from server
   const followedUsers = useSelector(selectFollowedUsers);
   const { filterTerm = "" } = useContext(FilterTermContext);
+  const [fetchCount, setFetchCount] = useState(0);
 
   const fetchCurrentUserPosts = async () => {
     try {
@@ -71,8 +72,11 @@ const Posts = () => {
 
       const data = await response.json();
 
+      console.log("data", data.articles.length);
+
       dispatch(setPosts(data.articles));
-      setTotalPages(data.articles.length); // Set the total pages (assuming the server sends this info)
+      //setTotalPages(data.articles.length); // Set the total pages (assuming the server sends this info)
+      setTotalPages(data.articles.length);
     } catch (error) {
       console.error("Error fetching user posts:", error);
     }
@@ -82,22 +86,6 @@ const Posts = () => {
     fetchCurrentUserPosts();
   }, [currentPage, followedUsers]); // Dependency on currentPage
 
-  // Filter and sort posts for display
-  /*const sortedAndFilteredPosts = useMemo(() => {
-    return (Array.isArray(posts) ? posts : [])
-      .filter((post) => {
-        const lowercasedFilterTerm = filterTerm.toLowerCase();
-        return (
-          (post.name &&
-            post.name.toLowerCase().includes(lowercasedFilterTerm)) ||
-          (post.desc &&
-            post.desc.toLowerCase().includes(lowercasedFilterTerm)) ||
-          (post.date && post.date.includes(filterTerm)) || // Filter by date
-          (post.articleId && post.articleId.includes(filterTerm)) // Filter by article id
-        );
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [posts, filterTerm]);*/
   const sortedAndFilteredPosts = useMemo(() => {
     return (Array.isArray(posts) ? posts : [])
       .filter((post) => {
@@ -113,36 +101,39 @@ const Posts = () => {
   }, [posts, filterTerm]);
 
   return (
-    <div className="posts container mt-5">
-      <Share />
-      <div className="row">
-        {/* Posts mapping */}
-        {sortedAndFilteredPosts.map((post) => (
-          <div className="col-12 mb-5" key={post.customId}>
-            <Post post={post} />
-          </div>
-        ))}
+    console.log(totalPages),
+    (
+      <div className="posts container mt-5">
+        <Share />
+        <div className="row">
+          {/* Posts mapping */}
+          {sortedAndFilteredPosts.map((post) => (
+            <div className="col-12 mb-5" key={post.customId}>
+              <Post post={post} />
+            </div>
+          ))}
+        </div>
+        <PaginationContainer>
+          <PageButton
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </PageButton>
+          <PageIndicator>
+            Page {currentPage} of {totalPages}
+          </PageIndicator>
+          <PageButton
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </PageButton>
+        </PaginationContainer>
       </div>
-      <PaginationContainer>
-        <PageButton
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </PageButton>
-        <PageIndicator>
-          Page {currentPage} of {totalPages}
-        </PageIndicator>
-        <PageButton
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </PageButton>
-      </PaginationContainer>
-    </div>
+    )
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import PlaceIcon from "@mui/icons-material/Place";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import CakeIcon from "@mui/icons-material/Cake";
@@ -67,6 +67,7 @@ const Profile = () => {
   // Add state variables for linking/unlinking accounting
   const [isAccountingLinked, setIsAccountingLinked] = useState(false);
   const [isLinkingInProgress, setIsLinkingInProgress] = useState(false);
+  const navigate = useNavigate();
 
   const [profileData, setProfileData] = useState({
     username: "",
@@ -285,18 +286,40 @@ const Profile = () => {
     }
   };
 
-  // Function to handle unlinking accounting
   const handleUnlinkAccounting = async () => {
+    console.log("unlink");
     setIsLinkingInProgress(true);
 
     try {
-      // Replace this with your actual unlinking logic
-      // Example: const response = await fetch("unlink_accounting_url", { method: "POST" });
+      const response = await fetch(
+        "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/unlinkThirdPartyUser",
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: currentUser.username,
+            isThirdPartyUser: currentUser.isThirdPartyUser,
+          }),
+        }
+      );
 
-      // If unlinking is successful, update the state
-      setIsAccountingLinked(false);
+      console.log(response);
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete account: ${response.statusText}`);
+      }
+
+      // Handle successful account deletion
+      // Redirect to the login page
+      //navigate("/login");
+      window.location.href =
+        "https://ricebookserveryw187-8fbcb305db50.herokuapp.com/auth/google/callback";
     } catch (error) {
-      console.error("Error unlinking accounting:", error);
+      console.error("Error deleting account:", error);
+      // Handle error and show a notification to the user
     } finally {
       setIsLinkingInProgress(false);
     }
